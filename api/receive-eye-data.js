@@ -2,7 +2,7 @@ import { TextEncoder } from 'util';
 
 export default function handler(req, res) {
     if (req.method === 'POST') {
-        const API_SPEC_ID = 'your-api-spec-id-here'; // Replace this with your actual API Spec ID
+        const API_SPEC_ID = 'dcd787d7-7658-4b2c-92e3-feb8ef061fa6'; // Replace this with your actual API Spec ID
 
         const resultService = {
             apiSpecId: API_SPEC_ID,

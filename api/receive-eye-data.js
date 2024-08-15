@@ -2,8 +2,8 @@ import { TextEncoder } from 'util';
 
 export default async function handler(req, res) {
     // Replace these with your actual API Spec ID and CameraKit API token
-    const API_SPEC_ID = 'your-api-spec-id-here';
-    const apiToken = process.env.CAMERA_KIT_API_TOKEN;
+    const API_SPEC_ID = 'dcd787d7-7658-4b2c-92e3-feb8ef061fa6';
+    const apiToken = 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjkxOTQxNDcyLCJzdWIiOiIwMmRlOTFiNC1iOGU5LTRhYTItYTM0Ni1kYWQ4YWVkNjU0NGJ-U1RBR0lOR35iOTUyOWExZS1lMDZhLTQ2OWQtYmZhNi1iNjZjZjFlZTUyNzMifQ.GQ_DJ4DMa5-Kj8GmEvoY39YbgHIcDxBCR306SkWhmCw';
 
     // Log the method of the incoming request
     console.log("Request received with method:", req.method);

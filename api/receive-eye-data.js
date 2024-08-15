@@ -1,74 +1,37 @@
-import { TextEncoder } from 'util';
+import { bootstrapCameraKit, Injectable, remoteApiServicesFactory } from "@snap/camera-kit";
 
-export default async function handler(req, res) {
-    // Replace these with your actual API Spec ID and CameraKit API token
-    const API_SPEC_ID = 'dcd787d7-7658-4b2c-92e3-feb8ef061fa6';
-    const apiToken = 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjkxOTQxNDcyLCJzdWIiOiIwMmRlOTFiNC1iOGU5LTRhYTItYTM0Ni1kYWQ4YWVkNjU0NGJ-U1RBR0lOR35iOTUyOWExZS1lMDZhLTQ2OWQtYmZhNi1iNjZjZjFlZTUyNzMifQ.GQ_DJ4DMa5-Kj8GmEvoY39YbgHIcDxBCR306SkWhmCw';
+// Define the Remote API Service
+const lensDataService = {
+    apiSpecId: "dcd787d7-7658-4b2c-92e3-feb8ef061fa6", // Replace with your actual API Spec ID
 
-    // Log the method of the incoming request
-    console.log("Request received with method:", req.method);
+    getRequestHandler(request) {
+        if (request.endpointId !== "your-endpoint-id-here") return; // Replace with your actual endpoint ID
 
-    if (req.method === 'POST') {
-        try {
-            // Dynamically import CameraKit dependencies
-            const {
-                bootstrapCameraKit,
-                Transform2D,
-                createMediaStreamSource,
-                Injectable,
-                remoteApiServicesFactory,
-            } = await import("@snap/camera-kit");
+        return (reply) => {
+            // Log the incoming request data
+            console.log("Received data from Lens:", request.body);
 
-            // Setup result service with your API Spec ID
-            const resultService = {
-                apiSpecId: 'dcd787d7-7658-4b2c-92e3-feb8ef061fa6',
+            // Example processing of the data
+            const processedData = `Received data: ${new TextDecoder().decode(request.body)}`;
 
-                getRequestHandler(request) {
-                    console.log("Received request from Lens:", request);
-
-                    return (reply) => {
-                        console.log("Replying to Lens:", reply);
-                        reply({
-                            status: "success",
-                            metadata: {},
-                            body: new TextEncoder().encode("Hello World"),
-                        });
-                    };
-                },
-            };
-
-            // Bootstrap CameraKit with API token and result service
-            const cameraKit = await bootstrapCameraKit(
-                {
-                    apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjkxOTQxNDcyLCJzdWIiOiIwMmRlOTFiNC1iOGU5LTRhYTItYTM0Ni1kYWQ4YWVkNjU0NGJ-U1RBR0lOR35iOTUyOWExZS1lMDZhLTQ2OWQtYmZhNi1iNjZjZjFlZTUyNzMifQ.GQ_DJ4DMa5-Kj8GmEvoY39YbgHIcDxBCR306SkWhmCw',
-                },
-                (container) => {
-                    return container.provides(
-                        Injectable(
-                            remoteApiServicesFactory.token,
-                            [remoteApiServicesFactory.token],
-                            (existing) => [...existing, resultService]
-                        )
-                    );
-                }
-            );
-
-            // Simulate handling a request
-            const requestData = req.body;
-            const handler = resultService.getRequestHandler(requestData);
-            
-            // Simulate replying to the incoming request
-            handler((reply) => {
-                console.log("Replying with:", reply);
-                res.status(200).json({ message: 'Data received successfully', reply });
+            // Reply back to the Lens with a success message
+            reply({
+                status: "success",
+                metadata: {},
+                body: new TextEncoder().encode(processedData),
             });
+        };
+    },
+};
 
-        } catch (error) {
-            console.error('Error processing data:', error);
-            res.status(500).json({ message: 'Internal Server Error' });
-        }
-    } else {
-        console.log("Received a non-POST request");
-        res.status(405).json({ message: 'Method not allowed' });
-    }
-}
+// Set up CameraKit with the Remote API Service
+const cameraKit = await bootstrapCameraKit(
+    { apiToken: "eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjkxOTQxNDcyLCJzdWIiOiIwMmRlOTFiNC1iOGU5LTRhYTItYTM0Ni1kYWQ4YWVkNjU0NGJ-U1RBR0lOR35iOTUyOWExZS1lMDZhLTQ2OWQtYmZhNi1iNjZjZjFlZTUyNzMifQ.GQ_DJ4DMa5-Kj8GmEvoY39YbgHIcDxBCR306SkWhmCw" }, // Ensure your API token is set up in Vercel environment
+    (container) => container.provides(
+        Injectable(
+            remoteApiServicesFactory.token,
+            [remoteApiServicesFactory.token],
+            (existing) => [...existing, lensDataService]
+        )
+    )
+);

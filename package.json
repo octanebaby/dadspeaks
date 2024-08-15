@@ -15,5 +15,10 @@
   },
   "dependencies": {
     "@snap/camera-kit": "^0.18.0"
+  },
+  "functions": {
+      "api/*.js": {
+        "runtime": "nodejs18.x"
+      }
   }
 }

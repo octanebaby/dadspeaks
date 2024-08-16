@@ -1,10 +1,4 @@
-import { bootstrapCameraKit, Injectable, remoteApiServicesFactory } from '@snap/camera-kit';
-
-// Define the RemoteApiService interface
-interface RemoteApiService {
-  apiSpecId: string;
-  getRequestHandler: (request: any) => (reply: any) => void;
-}
+import { bootstrapCameraKit, Injectable, remoteApiServicesFactory, CameraKit, RemoteApiService } from '@snap/camera-kit';
 
 (async function () {
   const cameraKit = await bootstrapCameraKit({
@@ -34,7 +28,7 @@ interface RemoteApiService {
     apiSpecId: "dcd787d7-7658-4b2c-92e3-feb8ef061fa6",  // Replace with your actual API spec ID
 
     getRequestHandler(request: any) {
-      if (request.endpointId !== "eye_expressions_endpoint") return;
+      if (request.endpointId !== "eye_expressions_endpoint") return () => {};
 
       return async (reply: any) => {
         try {
@@ -76,7 +70,9 @@ interface RemoteApiService {
   };
 
   // Inject the service into the container
-  cameraKit.provides(
+  const container = cameraKit['getContainer'](); // Assuming there's a method to get the container
+
+  container.provides(
     Injectable(
       remoteApiServicesFactory.token,
       [remoteApiServicesFactory.token] as const,

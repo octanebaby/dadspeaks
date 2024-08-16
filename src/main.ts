@@ -2,87 +2,49 @@ import {
   bootstrapCameraKit,
   Injectable,
   remoteApiServicesFactory,
-  RemoteApiService,
-  RemoteApiStatus, // Import the correct type for status
-} from "@snap/camera-kit";
+} from '@snap/camera-kit';
 
-(async function () {
-  const apiToken = process.env.CAMERA_KIT_API_TOKEN || '';
-
-  const cameraKit = await bootstrapCameraKit(
-    {
-      apiToken: apiToken,
-      logger: "console",
-    },
-    (container) => {
-      return container.provides(
-        Injectable(
-          remoteApiServicesFactory.token,
-          [remoteApiServicesFactory.token] as const,
-          (existing: RemoteApiService[]) => [...existing, receiveEyeDataService]
-        )
-      );
-    }
-  );
-
-  const liveRenderTarget = document.getElementById('canvas') as HTMLCanvasElement;
-  const session = await cameraKit.createSession({ liveRenderTarget });
-
-  const mediaStream = await navigator.mediaDevices.getUserMedia({
-    video: true,
+async function main() {
+  const cameraKit = await bootstrapCameraKit({
+    apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjkxOTQxNDcyLCJzdWIiOiIwMmRlOTFiNC1iOGU5LTRhYTItYTM0Ni1kYWQ4YWVkNjU0NGJ-U1RBR0lOR35iOTUyOWExZS1lMDZhLTQ2OWQtYmZhNi1iNjZjZjFlZTUyNzMifQ.GQ_DJ4DMa5-Kj8GmEvoY39YbgHIcDxBCR306SkWhmCw',
+  }, (container: any) => {
+    return container.provides(
+      Injectable(
+        remoteApiServicesFactory.token,
+        [remoteApiServicesFactory.token] as const,
+        (existing: any) => [...existing, resultService]
+      )
+    );
   });
 
-  await session.setSource(mediaStream);
-  await session.play();
-
-  const lens = await cameraKit.lensRepository.loadLens(
-    '1fc3ff92-832c-4d76-bf47-5af26b3cf034',
-    'edbb7369-1f9b-4b19-92f2-93f6f1de3f56'
-  );
-
-  await session.applyLens(lens);
-
-  const receiveEyeDataService: RemoteApiService = {
-    apiSpecId: 'dcd787d7-7658-4b2c-92e3-feb8ef061fa6', // Replace with your actual API spec ID
-
+  const resultService = {
+    apiSpecId: 'dcd787d7-7658-4b2c-92e3-feb8ef061fa6',
     getRequestHandler(request: any) {
-      if (request.endpointId !== "eye_expressions_endpoint") return;
+      if (request.endpointId !== 'eye_expressions_endpoint') return;
 
-      return (reply) => {
-        fetch('/api/receive-eye-data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(request.body),
-        })
-        .then(async (response) => {
-          if (response.ok) {
-            const responseData = await response.json();
-            console.log('Data received successfully:', responseData);
-            reply({
-              status: RemoteApiStatus.Success, // Use the correct status
-              metadata: {},
-              body: new TextEncoder().encode(JSON.stringify(responseData)),
-            });
-          } else {
-            console.error('Error receiving data:', response.statusText);
-            reply({
-              status: RemoteApiStatus.Failure, // Use the correct status
-              metadata: {},
-              body: new TextEncoder().encode('Failed to receive data'),
-            });
-          }
-        })
-        .catch((error) => {
-          console.error('Fetch error:', error);
-          reply({
-            status: RemoteApiStatus.Failure, // Use the correct status
-            metadata: {},
-            body: new TextEncoder().encode('Error processing request'),
-          });
+      return (reply: any) => {
+        reply({
+          status: 'success',
+          metadata: {},
+          body: new TextEncoder().encode('Data received'),
         });
       };
     },
   };
-})();
+
+  const liveRenderTarget = document.getElementById('canvas') as HTMLCanvasElement;
+  const session = await cameraKit.createSession({ liveRenderTarget });
+  const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+  
+  await session.setSource(mediaStream);
+  await session.play();
+  
+  const lens = await cameraKit.lensRepository.loadLens(
+    '1fc3ff92-832c-4d76-bf47-5af26b3cf034',
+    'edbb7369-1f9b-4b19-92f2-93f6f1de3f56'
+  );
+  
+  await session.applyLens(lens);
+}
+
+main().catch(console.error);

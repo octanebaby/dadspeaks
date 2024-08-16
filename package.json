@@ -14,11 +14,11 @@
     "vite": "^5.3.1"
   },
   "dependencies": {
-    "@snap/camera-kit": "^0.18.0"
+    "@snap/camera-kit": "^0.18.1"
   },
   "functions": {
-      "api/*.js": {
-        "runtime": "nodejs18.x"
-      }
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
   }
 }

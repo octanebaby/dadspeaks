@@ -1,10 +1,28 @@
-import { bootstrapCameraKit, Injectable, remoteApiServicesFactory, CameraKit, RemoteApiService } from '@snap/camera-kit';
+import {
+  bootstrapCameraKit,
+  Injectable,
+  remoteApiServicesFactory,
+  RemoteApiService,
+} from "@snap/camera-kit";
 
 (async function () {
-  const cameraKit = await bootstrapCameraKit({
-    apiToken: process.env.CAMERA_KIT_API_TOKEN || '',  // Ensure the API token is always a string
-    logger: 'console',
-  });
+  const apiToken = process.env.CAMERA_KIT_API_TOKEN || '';
+
+  const cameraKit = await bootstrapCameraKit(
+    {
+      apiToken: apiToken,
+      logger: "console",
+    },
+    (container) => {
+      return container.provides(
+        Injectable(
+          remoteApiServicesFactory.token,
+          [remoteApiServicesFactory.token] as const,
+          (existing: RemoteApiService[]) => [...existing, receiveEyeDataService]
+        )
+      );
+    }
+  );
 
   const liveRenderTarget = document.getElementById('canvas') as HTMLCanvasElement;
   const session = await cameraKit.createSession({ liveRenderTarget });
@@ -23,27 +41,24 @@ import { bootstrapCameraKit, Injectable, remoteApiServicesFactory, CameraKit, Re
 
   await session.applyLens(lens);
 
-  // Define your Remote API service
   const receiveEyeDataService: RemoteApiService = {
-    apiSpecId: "dcd787d7-7658-4b2c-92e3-feb8ef061fa6",  // Replace with your actual API spec ID
+    apiSpecId: 'dcd787d7-7658-4b2c-92e3-feb8ef061fa6', // Replace with your actual API spec ID
 
     getRequestHandler(request: any) {
-      if (request.endpointId !== "eye_expressions_endpoint") return () => {};
+      if (request.endpointId !== "eye_expressions_endpoint") return;
 
-      return async (reply: any) => {
-        try {
-          const response = await fetch('/api/receive-eye-data', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(request.body),
-          });
-
+      return (reply) => {
+        fetch('/api/receive-eye-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request.body),
+        })
+        .then(async (response) => {
           if (response.ok) {
             const responseData = await response.json();
             console.log('Data received successfully:', responseData);
-
             reply({
               status: "success",
               metadata: {},
@@ -57,26 +72,16 @@ import { bootstrapCameraKit, Injectable, remoteApiServicesFactory, CameraKit, Re
               body: new TextEncoder().encode('Failed to receive data'),
             });
           }
-        } catch (error) {
+        })
+        .catch((error) => {
           console.error('Fetch error:', error);
           reply({
             status: "failure",
             metadata: {},
             body: new TextEncoder().encode('Error processing request'),
           });
-        }
+        });
       };
     },
   };
-
-  // Inject the service into the container
-  const container = cameraKit['getContainer'](); // Assuming there's a method to get the container
-
-  container.provides(
-    Injectable(
-      remoteApiServicesFactory.token,
-      [remoteApiServicesFactory.token] as const,
-      (existing: RemoteApiService[]) => [...existing, receiveEyeDataService]
-    )
-  );
 })();

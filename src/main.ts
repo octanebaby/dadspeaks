@@ -3,6 +3,7 @@ import {
   Injectable,
   remoteApiServicesFactory,
   RemoteApiService,
+  RemoteApiStatus, // Import the correct type for status
 } from "@snap/camera-kit";
 
 (async function () {
@@ -60,14 +61,14 @@ import {
             const responseData = await response.json();
             console.log('Data received successfully:', responseData);
             reply({
-              status: "success",
+              status: RemoteApiStatus.Success, // Use the correct status
               metadata: {},
               body: new TextEncoder().encode(JSON.stringify(responseData)),
             });
           } else {
             console.error('Error receiving data:', response.statusText);
             reply({
-              status: "failure",
+              status: RemoteApiStatus.Failure, // Use the correct status
               metadata: {},
               body: new TextEncoder().encode('Failed to receive data'),
             });
@@ -76,7 +77,7 @@ import {
         .catch((error) => {
           console.error('Fetch error:', error);
           reply({
-            status: "failure",
+            status: RemoteApiStatus.Failure, // Use the correct status
             metadata: {},
             body: new TextEncoder().encode('Error processing request'),
           });

@@ -1,8 +1,14 @@
 import { bootstrapCameraKit, Injectable, remoteApiServicesFactory } from '@snap/camera-kit';
 
+// Define the RemoteApiService interface
+interface RemoteApiService {
+  apiSpecId: string;
+  getRequestHandler: (request: any) => (reply: any) => void;
+}
+
 (async function () {
   const cameraKit = await bootstrapCameraKit({
-    apiToken: process.env.CAMERA_KIT_API_TOKEN,
+    apiToken: process.env.CAMERA_KIT_API_TOKEN || '',  // Ensure the API token is always a string
     logger: 'console',
   });
 
@@ -25,7 +31,7 @@ import { bootstrapCameraKit, Injectable, remoteApiServicesFactory } from '@snap/
 
   // Define your Remote API service
   const receiveEyeDataService: RemoteApiService = {
-    apiSpecId: "dcd787d7-7658-4b2c-92e3-feb8ef061fa6", // Replace with your actual API spec ID
+    apiSpecId: "dcd787d7-7658-4b2c-92e3-feb8ef061fa6",  // Replace with your actual API spec ID
 
     getRequestHandler(request: any) {
       if (request.endpointId !== "eye_expressions_endpoint") return;
@@ -70,11 +76,11 @@ import { bootstrapCameraKit, Injectable, remoteApiServicesFactory } from '@snap/
   };
 
   // Inject the service into the container
-  cameraKit.getContainer().provides(
+  cameraKit.provides(
     Injectable(
       remoteApiServicesFactory.token,
       [remoteApiServicesFactory.token] as const,
-      (existing: RemoteApiServices) => [...existing, receiveEyeDataService]
+      (existing: RemoteApiService[]) => [...existing, receiveEyeDataService]
     )
   );
 })();
